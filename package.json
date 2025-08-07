@@ -30,5 +30,6 @@
   },
   "devDependencies": {
     "@prisma/client": "^5.7.1"
-  }
+  },
+  "license": "0BSD"
 }

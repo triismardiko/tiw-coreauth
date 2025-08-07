@@ -20,3 +20,6 @@ cp .env.example .env
 npm install
 npx prisma generate
 npm run dev
+
+[![Node.js](https://img.shields.io/badge/Node.js-Fastify-green)](#)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
