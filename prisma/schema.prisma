@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int     @id @default(autoincrement())
+  email       String  @unique
+  password    String
+  name        String?
+  isActive    Boolean @default(true)
+  twoFASecret String? @map("two_fa_secret")
+  provider    String  @default("local")
+  roleId      IntA
+  role        Role    @relation(fields: [roleId], references: [id])
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  tenantId  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  refreshTokens RefreshToken[]
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  description String?
+  permissions Permission[] @relation("RolePermission", references: [id])
+  users       User[]
+}
+
+model Permission {
+  id          Int    @id @default(autoincrement())
+  code        String @unique // e.g. "user:create"
+  name        String
+  description String?
+  roles       Role[] @relation("RolePermission", references: [id])
+}
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int?     
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String   // e.g. "LOGIN_SUCCESS", "LOGIN_FAILED", "ACCESS_ROUTE"
+  description String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  tenantId   Int
+  tenant     Tenant @relation(fields: [tenantId], references: [id]) 
+}
+
+model ApiKey {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  label     String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  expiredAt DateTime
+  isRevoked Boolean  @default(false)
+}
+
+model Tenant {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String   @unique
+  users     User[]
+  apiKeys   ApiKey[]
+  createdAt DateTime @default(now())
+}
+
