@@ -1,19 +1,26 @@
+// File: src/modules/admin/routes/admin.route.js
+
 import {
   listUsers,
   createUser,
   updateUser,
   deleteUser
 } from '../controllers/user.controller.js';
+
 import {
   listTenants,
   createTenant
 } from '../controllers/tenant.controller.js';
+
 import {
-  getRoles,
-  updateRolePermissions
-} from '../controllers/role.controller.js';
-import { getPermissions } from '../controllers/permission.controller.js';
-import { getAuditLogs } from '../controllers/audit.controller.js';
+  getAuditLogs
+} from '../controllers/audit.controller.js';
+
+import {
+  adminUserSchemas,
+  adminTenantSchemas,
+  adminAuditSchemas
+} from '../schemas/admin.schema.js';
 
 import { resolveTenant } from '../../credentials/middlewares/resolveTenant.js';
 import { verifyRole } from '../../credentials/middlewares/verifyRole.js';
@@ -21,21 +28,16 @@ import { verifyRole } from '../../credentials/middlewares/verifyRole.js';
 export default async function adminRoutes(fastify) {
   const adminOnly = [resolveTenant, verifyRole('admin')];
 
-  // User
-  fastify.get('/admin/users', { preHandler: adminOnly }, listUsers);
-  fastify.post('/admin/users', { preHandler: adminOnly }, createUser);
-  fastify.put('/admin/users/:id', { preHandler: adminOnly }, updateUser);
+  // Users
+  fastify.get('/admin/users', { preHandler: adminOnly, schema: adminUserSchemas.listUsers }, listUsers);
+  fastify.post('/admin/users', { preHandler: adminOnly, schema: adminUserSchemas.createUser }, createUser);
+  fastify.put('/admin/users/:id', { preHandler: adminOnly, schema: adminUserSchemas.updateUser }, updateUser);
   fastify.delete('/admin/users/:id', { preHandler: adminOnly }, deleteUser);
 
-  // Tenant
-  fastify.get('/admin/tenants', { preHandler: adminOnly }, listTenants);
-  fastify.post('/admin/tenants', { preHandler: adminOnly }, createTenant);
+  // Tenants
+  fastify.get('/admin/tenants', { preHandler: adminOnly, schema: adminTenantSchemas.listTenants }, listTenants);
+  fastify.post('/admin/tenants', { preHandler: adminOnly, schema: adminTenantSchemas.createTenant }, createTenant);
 
-  // Role & Permission
-  fastify.get('/admin/roles', { preHandler: adminOnly }, getRoles);
-  fastify.put('/admin/roles/:id/permissions', { preHandler: adminOnly }, updateRolePermissions);
-  fastify.get('/admin/permissions', { preHandler: adminOnly }, getPermissions);
-
-  // Audit Log
-  fastify.get('/admin/audit-logs', { preHandler: adminOnly }, getAuditLogs);
+  // Audit Logs
+  fastify.get('/admin/audit-logs', { preHandler: adminOnly, schema: adminAuditSchemas.getAuditLogs }, getAuditLogs);
 }

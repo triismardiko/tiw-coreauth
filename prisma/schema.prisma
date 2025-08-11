@@ -22,6 +22,7 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   refreshTokens RefreshToken[]
+  lockedUntil     DateTime? 
 }
 
 model Role {
@@ -78,5 +79,15 @@ model Tenant {
   users     User[]
   apiKeys   ApiKey[]
   createdAt DateTime @default(now())
+}
+
+model RefreshToken {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  token       String    @unique
+  revoked     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  user        User      @relation(fields: [userId], references: [id])
 }
 

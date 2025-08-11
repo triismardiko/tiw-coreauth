@@ -7,11 +7,21 @@ import { registerSchema, loginSchema } from '../schemas/auth.schema.js';
 import { setup2FASchema, verify2FASchema } from '../schemas/2fa.schema.js';
 import { googleSchema, linkedinSchema } from '../schemas/oauth.schema.js';
 
+import {
+  loginRateLimit,
+  registerRateLimit,
+  twoFARateLimit
+} from '../middlewares/rateLimits.js';
+
+import { logoutHandler } from '../controllers/logout.controller.js';
+import { verifyAccessToken } from '../middlewares/verifyAccessToken.js';
+
+
 export default async function authRoutes(fastify) {
-  fastify.post('/auth/register', {   preHandler: [resolveTenant],schema: registerSchema }, registerHandler);
-  fastify.post('/auth/login', {  preHandler: [resolveTenant],schema: loginSchema }, loginHandler);
+  fastify.post('/auth/register', {   preHandler: [resolveTenant],schema: registerSchema },registerRateLimit, registerHandler);
+  fastify.post('/auth/login', {  preHandler: [resolveTenant],schema: loginSchema },loginRateLimit, loginHandler);
   fastify.post('/auth/2fa/setup', { preHandler: [resolveTenant], schema: setup2FASchema }, setup2FAHandler);
-  fastify.post('/auth/2fa/verify', {  preHandler: [resolveTenant],schema: verify2FASchema }, verify2FAHandler);
+  fastify.post('/auth/2fa/verify', {  preHandler: [resolveTenant],schema: verify2FASchema },twoFARateLimit, verify2FAHandler);
 
   fastify.get('/auth/google', { schema: googleSchema }, fastifyPassport.authenticate('google', { scope: ['email', 'profile'] }));
   fastify.get('/auth/google/callback', { schema: { tags: ['OAuth'], summary: 'Google callback' } }, fastifyPassport.authenticate('google', { session: false }), async (req, reply) => {
@@ -26,4 +36,5 @@ export default async function authRoutes(fastify) {
   });
 
   fastify.post('/auth/refresh-token', { preHandler: [resolveTenant],schema: refreshTokenSchema}, refreshTokenHandler);
+  fastify.post('/auth/logout', { preHandler: [verifyAccessToken] }, logoutHandler);
 }
